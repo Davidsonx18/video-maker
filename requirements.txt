@@ -1,0 +1,7 @@
+flask
+pillow
+moviepy
+requests
+imageio
+imageio-ffmpeg
+numpy
