@@ -5,3 +5,4 @@ requests
 imageio
 imageio-ffmpeg
 numpy
+gunicorn
