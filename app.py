@@ -1,4 +1,4 @@
-# v4
+# v5
 from flask import Flask, request, jsonify, send_file
 from PIL import Image, ImageDraw, ImageFont
 import os, uuid, textwrap
@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def health():
-    return jsonify({"status": "ok", "versao": "4"})
+    return jsonify({"status": "ok", "versao": "5"})
 
 @app.route("/criar-video", methods=["POST"])
 def criar_video_endpoint():
@@ -17,8 +17,8 @@ def criar_video_endpoint():
         if not frase or not arquivo:
             return jsonify({"erro": "Frase e imagem sao obrigatorios"}), 400
         uid = str(uuid.uuid4())
-        imagem_path = f"/tmp/{uid}.jpg"
-        output_path = f"/tmp/{uid}.jpg"
+        imagem_path = f"/tmp/{uid}_input.jpg"
+        output_path = f"/tmp/{uid}_output.jpg"
         arquivo.save(imagem_path)
         img = Image.open(imagem_path).convert("RGB")
         img = img.resize((1080, 1920), Image.LANCZOS)
@@ -38,7 +38,7 @@ def criar_video_endpoint():
             y += 90
         img.save(output_path, quality=95)
         os.remove(imagem_path)
-        return send_file(output_path, mimetype="image/jpeg", as_attachment=True, download_name="imagem.jpg")
+        return send_file(output_path, mimetype="image/jpeg", as_attachment=True, download_name="resultado.jpg")
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
 
