@@ -1,3 +1,4 @@
+# v2
 from flask import Flask, request, jsonify, send_file
 from PIL import Image, ImageDraw, ImageFont
 import os
@@ -55,6 +56,10 @@ def criar_video_endpoint():
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
 
+@app.route("/test", methods=["GET"])
+def test():
+    return jsonify({"rotas": "funcionando", "rota": "/criar-video disponivel"})
+
 @app.route("/")
 def health():
     return jsonify({"status": "ok"})
@@ -62,4 +67,3 @@ def health():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
