@@ -37,7 +37,13 @@ def criar_video_endpoint():
         arquivo.save(imagem_path)
 
         img = Image.open(imagem_path).convert("RGB")
-        img = img.resize((1080, 1920), Image.LANCZOS)
+        # Mantém proporção e adiciona fundo preto
+        img_original = img.copy()
+        img = Image.new("RGB", (1080, 1920), (0, 0, 0))
+        img_original.thumbnail((1080, 1920), Image.LANCZOS)
+        x = (1080 - img_original.width) // 2
+        y = (1920 - img_original.height) // 2
+        img.paste(img_original, (x, y))
         draw = ImageDraw.Draw(img)
 
         try:
