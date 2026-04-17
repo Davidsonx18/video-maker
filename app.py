@@ -1,11 +1,11 @@
-# v6
+# v7
 from flask import Flask, request, jsonify, send_file
 from PIL import Image, ImageDraw, ImageFont
 import os, uuid, textwrap, re
 
 app = Flask(__name__)
 
-def separar_texto_emojis(frase):
+def remover_emojis(texto):
     emoji_pattern = re.compile("["
         u"\U0001F600-\U0001F64F"
         u"\U0001F300-\U0001F5FF"
@@ -15,13 +15,11 @@ def separar_texto_emojis(frase):
         u"\U0001FA70-\U0001FAFF"
         u"\U0001F1E0-\U0001F1FF"
         "]+", flags=re.UNICODE)
-    emojis = emoji_pattern.findall(frase)
-    texto_limpo = emoji_pattern.sub('', frase).strip()
-    return texto_limpo, emojis
+    return emoji_pattern.sub('', texto).strip()
 
 @app.route("/")
 def health():
-    return jsonify({"status": "ok", "versao": "6"})
+    return jsonify({"status": "ok", "versao": "7"})
 
 @app.route("/criar-video", methods=["POST"])
 def criar_video_endpoint():
@@ -30,41 +28,38 @@ def criar_video_endpoint():
         arquivo = request.files.get("imagem")
         if not frase or not arquivo:
             return jsonify({"erro": "Frase e imagem sao obrigatorios"}), 400
+
+        frase = remover_emojis(frase)
+
         uid = str(uuid.uuid4())
         imagem_path = f"/tmp/{uid}_input.jpg"
         output_path = f"/tmp/{uid}_output.jpg"
         arquivo.save(imagem_path)
+
         img = Image.open(imagem_path).convert("RGB")
         img = img.resize((1080, 1920), Image.LANCZOS)
         draw = ImageDraw.Draw(img)
 
-        texto_limpo, emojis = separar_texto_emojis(frase)
-
         try:
-            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 72)
-            font_emoji = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 80)
+            font = ImageFont.truetype("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", 55)
         except:
-            font = ImageFont.load_default()
-            font_emoji = font
+            try:
+                font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 55)
+            except:
+                font = ImageFont.load_default()
 
-        linhas = textwrap.wrap(texto_limpo, width=22)
-        total_linhas = len(linhas) + (1 if emojis else 0)
-        y = img.height // 2 - (total_linhas * 95) // 2
+        linhas = textwrap.wrap(frase, width=28)
+        y = img.height // 2 - (len(linhas) * 70) // 2
 
         for linha in linhas:
             bbox = draw.textbbox((0, 0), linha, font=font)
             w = bbox[2] - bbox[0]
             x = (img.width - w) // 2
+            # Sombra
             draw.text((x+3, y+3), linha, font=font, fill=(0, 0, 0))
+            # Texto branco
             draw.text((x, y), linha, font=font, fill=(255, 255, 255))
-            y += 95
-
-        if emojis:
-            emoji_texto = ' '.join(emojis)
-            bbox = draw.textbbox((0, 0), emoji_texto, font=font_emoji)
-            w = bbox[2] - bbox[0]
-            x = (img.width - w) // 2
-            draw.text((x, y + 10), emoji_texto, font=font_emoji, fill=(255, 255, 255))
+            y += 70
 
         img.save(output_path, quality=95)
         os.remove(imagem_path)
